@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HouseOfRiwaze.Api/HouseOfRiwaze.Api.csproj" />
+    <Project Path="src/HouseOfRiwaze.Shared/HouseOfRiwaze.Shared.csproj" />
+    <Project Path="src/Modules.Auth/Modules.Auth.csproj" />
+    <Project Path="src/Modules.Catalog/Modules.Catalog.csproj" />
+    <Project Path="src/Modules.Enquiries/Modules.Enquiries.csproj" />
+    <Project Path="src/Modules.Store/Modules.Store.csproj" />
+  </Folder>
+</Solution>

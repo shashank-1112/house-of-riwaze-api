@@ -1,0 +1,6 @@
+@HouseOfRiwaze.Api_HostAddress = http://localhost:5185
+
+GET {{HouseOfRiwaze.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
