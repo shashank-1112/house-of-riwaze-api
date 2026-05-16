@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Build outputs
+bin/
+obj/
+**/bin/
+**/obj/
+
+# IDE / editor files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local secrets / environment files
+appsettings.Development.json
+appsettings.Local.json
+.env
+.env.*
+secrets.json
+
+# Test / coverage output
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Docker files not needed inside image
+docker-compose.yml
+docker-compose.*.yml
+
+# NuGet cache/packages if any local package folder exists
+packages/
+.nuget/
