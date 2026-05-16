@@ -11,7 +11,8 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "https://house-of-riwaze-web.vercel.app"
+                "https://house-of-riwaze-web.vercel.app",
+                "https://rivaaze.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
