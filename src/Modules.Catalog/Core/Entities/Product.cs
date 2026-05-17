@@ -12,6 +12,9 @@ public class Product : BaseEntity
 
     public string MetalType { get; set; } = "Gold";
     public string Purity { get; set; } = "22K";
+    public string JewelleryType { get; set; } = "None";
+    public string MetalColor { get; set; } = "None";
+    public string AccessoryType { get; set; } = "None";
 
     public decimal GrossWeight { get; set; }
     public decimal NetWeight { get; set; }
@@ -39,6 +42,7 @@ public class Product : BaseEntity
     public decimal TryOnOffsetX { get; set; }
     public decimal TryOnOffsetY { get; set; }
     public decimal TryOnRotation { get; set; }
+
 
     public List<ProductImage> Images { get; set; } = new();
     public List<ProductStone> Stones { get; set; } = new();

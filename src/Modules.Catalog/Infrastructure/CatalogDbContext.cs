@@ -49,6 +49,21 @@ public class CatalogDbContext : DbContext
                 .HasMaxLength(40)
                 .IsRequired();
 
+            entity.Property(x => x.JewelleryType)
+                .HasMaxLength(60)
+                .IsRequired()
+                .HasDefaultValue("None");
+
+            entity.Property(x => x.MetalColor)
+                .HasMaxLength(60)
+                .IsRequired()
+                .HasDefaultValue("None");
+
+            entity.Property(x => x.AccessoryType)
+                .HasMaxLength(60)
+                .IsRequired()
+                .HasDefaultValue("None");
+
             entity.Property(x => x.Purity)
                 .HasMaxLength(40)
                 .IsRequired();
@@ -120,6 +135,10 @@ public class CatalogDbContext : DbContext
 
             entity.Property(x => x.SortOrder)
                 .IsRequired();
+
+            entity.Property(x => x.IsPrimary)
+                .IsRequired()
+                .HasDefaultValue(false);
         });
 
         modelBuilder.Entity<ProductStone>(entity =>

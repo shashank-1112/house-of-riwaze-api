@@ -65,19 +65,40 @@ public sealed class ProductService : IProductService
                 x.Sku.ToLower().Contains(search));
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Category) && query.Category != "all")
+        if (ShouldApplyFilter(query.Category))
         {
-            dbQuery = dbQuery.Where(x => x.Category == query.Category);
+            var category = query.Category!.Trim();
+            dbQuery = dbQuery.Where(x => x.Category == category);
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Metal) && query.Metal != "all")
+        if (ShouldApplyFilter(query.Metal))
         {
-            dbQuery = dbQuery.Where(x => x.MetalType == query.Metal);
+            var metal = query.Metal!.Trim();
+            dbQuery = dbQuery.Where(x => x.MetalType == metal);
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Visibility) && query.Visibility != "all")
+        if (ShouldApplyFilter(query.JewelleryType))
         {
-            dbQuery = dbQuery.Where(x => x.Visibility == query.Visibility);
+            var jewelleryType = query.JewelleryType!.Trim();
+            dbQuery = dbQuery.Where(x => x.JewelleryType == jewelleryType);
+        }
+
+        if (ShouldApplyFilter(query.MetalColor))
+        {
+            var metalColor = query.MetalColor!.Trim();
+            dbQuery = dbQuery.Where(x => x.MetalColor == metalColor);
+        }
+
+        if (ShouldApplyFilter(query.AccessoryType))
+        {
+            var accessoryType = query.AccessoryType!.Trim();
+            dbQuery = dbQuery.Where(x => x.AccessoryType == accessoryType);
+        }
+
+        if (ShouldApplyFilter(query.Visibility))
+        {
+            var visibility = query.Visibility!.Trim();
+            dbQuery = dbQuery.Where(x => x.Visibility == visibility);
         }
 
         if (query.IsFeatured.HasValue)
@@ -219,9 +240,24 @@ public sealed class ProductService : IProductService
             throw new InvalidOperationException("Category is required.");
         }
 
-        if (request.NetWeight < 0 || request.GrossWeight < 0)
+        if (string.IsNullOrWhiteSpace(request.MetalType))
+        {
+            throw new InvalidOperationException("Metal type is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Purity))
+        {
+            throw new InvalidOperationException("Purity is required.");
+        }
+
+        if (request.GrossWeight < 0 || request.NetWeight < 0)
         {
             throw new InvalidOperationException("Weight cannot be negative.");
+        }
+
+        if (request.NetWeight > request.GrossWeight)
+        {
+            throw new InvalidOperationException("Net weight cannot be greater than gross weight.");
         }
 
         if (request.StockQuantity < 0)
@@ -243,6 +279,19 @@ public sealed class ProductService : IProductService
         {
             throw new InvalidOperationException("Price override cannot be negative.");
         }
+
+        foreach (var stone in request.StoneDetails)
+        {
+            if (stone.Carat < 0)
+            {
+                throw new InvalidOperationException("Stone carat cannot be negative.");
+            }
+
+            if (stone.Cost < 0)
+            {
+                throw new InvalidOperationException("Stone cost cannot be negative.");
+            }
+        }
     }
 
     private static void ApplyRequest(Product product, SaveProductRequest request)
@@ -253,20 +302,18 @@ public sealed class ProductService : IProductService
         product.Category = request.Category.Trim();
         product.SubCategory = request.SubCategory?.Trim();
 
-        product.MetalType = string.IsNullOrWhiteSpace(request.MetalType)
-            ? "Gold"
-            : request.MetalType.Trim();
-
-        product.Purity = string.IsNullOrWhiteSpace(request.Purity)
-            ? "22K"
-            : request.Purity.Trim();
+        product.MetalType = NormalizeRequired(request.MetalType, "Gold");
+        product.JewelleryType = NormalizeOptional(request.JewelleryType);
+        product.MetalColor = NormalizeOptional(request.MetalColor);
+        product.AccessoryType = NormalizeOptional(request.AccessoryType);
+        product.Purity = NormalizeRequired(request.Purity, "22K");
 
         product.GrossWeight = request.GrossWeight;
         product.NetWeight = request.NetWeight;
 
-        product.MakingChargesType = string.IsNullOrWhiteSpace(request.MakingChargesType)
-            ? "per_gram"
-            : request.MakingChargesType.Trim();
+        product.MakingChargesType = NormalizeRequired(
+            request.MakingChargesType,
+            "per_gram");
 
         product.MakingCharges = request.MakingCharges;
         product.PriceOverride = request.PriceOverride;
@@ -277,25 +324,14 @@ public sealed class ProductService : IProductService
         product.Description = request.Description ?? string.Empty;
         product.Tags = request.Tags ?? string.Empty;
 
-        product.Visibility = string.IsNullOrWhiteSpace(request.Visibility)
-            ? "Published"
-            : request.Visibility.Trim();
-
-        product.Gender = string.IsNullOrWhiteSpace(request.Gender)
-            ? "Unisex"
-            : request.Gender.Trim();
-
-        product.Occasion = string.IsNullOrWhiteSpace(request.Occasion)
-            ? "Any"
-            : request.Occasion.Trim();
+        product.Visibility = NormalizeRequired(request.Visibility, "Published");
+        product.Gender = NormalizeRequired(request.Gender, "Unisex");
+        product.Occasion = NormalizeRequired(request.Occasion, "Any");
 
         product.IsFeatured = request.IsFeatured;
 
         product.TryOnEnabled = request.TryOnEnabled;
-        product.TryOnType = string.IsNullOrWhiteSpace(request.TryOnType)
-            ? "ring"
-            : request.TryOnType.Trim();
-
+        product.TryOnType = NormalizeRequired(request.TryOnType, "ring");
         product.TryOnAssetUrl = request.TryOnAsset;
         product.TryOnScale = request.TryOnScale <= 0 ? 1 : request.TryOnScale;
         product.TryOnOffsetX = request.TryOnOffsetX;
@@ -313,13 +349,20 @@ public sealed class ProductService : IProductService
             .ToList();
 
         product.Stones = request.StoneDetails
+            .Where(stone =>
+                !string.IsNullOrWhiteSpace(stone.StoneType) ||
+                stone.Carat > 0 ||
+                !string.IsNullOrWhiteSpace(stone.Clarity) ||
+                !string.IsNullOrWhiteSpace(stone.Cut) ||
+                !string.IsNullOrWhiteSpace(stone.Color) ||
+                stone.Cost > 0)
             .Select(stone => new ProductStone
             {
-                StoneType = stone.StoneType ?? string.Empty,
+                StoneType = stone.StoneType?.Trim() ?? string.Empty,
                 Carat = stone.Carat,
-                Clarity = stone.Clarity ?? string.Empty,
-                Cut = stone.Cut ?? string.Empty,
-                Color = stone.Color ?? string.Empty,
+                Clarity = stone.Clarity?.Trim() ?? string.Empty,
+                Cut = stone.Cut?.Trim() ?? string.Empty,
+                Color = stone.Color?.Trim() ?? string.Empty,
                 Cost = stone.Cost
             })
             .ToList();
@@ -338,6 +381,9 @@ public sealed class ProductService : IProductService
             SubCategory = product.SubCategory,
 
             MetalType = product.MetalType,
+            JewelleryType = product.JewelleryType,
+            MetalColor = product.MetalColor,
+            AccessoryType = product.AccessoryType,
             Purity = product.Purity,
 
             GrossWeight = product.GrossWeight,
@@ -364,15 +410,18 @@ public sealed class ProductService : IProductService
 
             IsFeatured = product.IsFeatured,
 
-            StoneDetails = product.Stones.Select(stone => new ProductStoneDto
-            {
-                StoneType = stone.StoneType,
-                Carat = stone.Carat,
-                Clarity = stone.Clarity,
-                Cut = stone.Cut,
-                Color = stone.Color,
-                Cost = stone.Cost
-            }).ToList(),
+            StoneDetails = product.Stones
+                .OrderBy(x => x.Id)
+                .Select(stone => new ProductStoneDto
+                {
+                    StoneType = stone.StoneType,
+                    Carat = stone.Carat,
+                    Clarity = stone.Clarity,
+                    Cut = stone.Cut,
+                    Color = stone.Color,
+                    Cost = stone.Cost
+                })
+                .ToList(),
 
             TryOnEnabled = product.TryOnEnabled,
             TryOnType = product.TryOnType,
@@ -385,5 +434,25 @@ public sealed class ProductService : IProductService
             CreatedDate = product.CreatedAt,
             UpdatedDate = product.UpdatedAt
         };
+    }
+
+    private static bool ShouldApplyFilter(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value) &&
+               !string.Equals(value.Trim(), "all", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeRequired(string? value, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? fallback
+            : value.Trim();
+    }
+
+    private static string NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "None"
+            : value.Trim();
     }
 }
