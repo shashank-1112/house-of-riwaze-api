@@ -21,6 +21,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+//bearer token auth with swagger
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
