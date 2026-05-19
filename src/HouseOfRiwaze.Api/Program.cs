@@ -1,4 +1,6 @@
+using Microsoft.OpenApi;
 using Modules.Catalog;
+using Modules.Auth;
 using Modules.Store;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +22,26 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {admin JWT token}"
+    });
 
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", document, null),
+            new List<string>()
+        }
+    });
+});
+
+builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddStoreModule(builder.Configuration);
 
@@ -33,6 +53,8 @@ app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/", () => Results.Ok(new
 {
@@ -40,6 +62,7 @@ app.MapGet("/", () => Results.Ok(new
     status = "running"
 }));
 
+app.MapAuthEndpoints();
 app.MapCatalogEndpoints();
 app.MapStoreEndpoints();
 

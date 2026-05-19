@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Modules.Auth;
 using Modules.Store.Infrastructure;
 using Modules.Store.Services;
 
@@ -45,6 +46,7 @@ public static class StoreModule
 
             return Results.Ok(rates);
         })
+        .RequireAuthorization(AdminAuthorization.Policy)
         .WithTags("Metal Rates");
 
         app.MapPost("/api/admin/metal-rates/refresh", async (
@@ -66,6 +68,7 @@ public static class StoreModule
                 });
             }
         })
+        .RequireAuthorization(AdminAuthorization.Policy)
         .WithTags("Admin Metal Rates");
 
         app.MapGet("/api/store-settings", async (
@@ -88,6 +91,7 @@ public static class StoreModule
 
             return Results.Ok(settings);
         })
+        .RequireAuthorization(AdminAuthorization.Policy)
         .WithTags("Admin Store Settings");
 
         app.MapPut("/api/admin/store-settings", async (
@@ -111,6 +115,7 @@ public static class StoreModule
                 });
             }
         })
+        .RequireAuthorization(AdminAuthorization.Policy)
         .WithTags("Admin Store Settings");
 
         return app;

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Modules.Auth\Modules.Auth.csproj" />
     <ProjectReference Include="..\HouseOfRiwaze.Shared\HouseOfRiwaze.Shared.csproj" />
   </ItemGroup>
 

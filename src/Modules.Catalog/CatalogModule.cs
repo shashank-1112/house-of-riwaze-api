@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Modules.Auth;
 using Modules.Catalog.Application.DTOs;
 using Modules.Catalog.Application.Services;
 using Modules.Catalog.Infrastructure;
@@ -77,6 +78,7 @@ public static class CatalogModule
         });
 
         var adminGroup = app.MapGroup("/api/admin/products")
+            .RequireAuthorization(AdminAuthorization.Policy)
             .WithTags("Admin Products");
 
         adminGroup.MapGet("/", async (
